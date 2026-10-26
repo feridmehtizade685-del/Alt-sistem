@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>İnam və Himayə – Onlayn Məsləhət Alt Sistemi</title>
+<style>
+  :root{--bg:#f4f6fa;--card:#fff;--ink:#1d2433;--mut:#667085;--pri:#2457c5;--pri2:#e8effc;--ok:#1a7f4b;--warn:#b86e00;--bad:#c0392b;--line:#dfe3ec}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--pri);color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+  header h1{font-size:18px;margin:0}
+  header small{opacity:.85}
+  main{max-width:1250px;margin:16px auto;padding:0 12px;display:grid;grid-template-columns:2fr 1fr;gap:14px}
+  @media(max-width:950px){main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+  .card h2{font-size:15px;margin:0 0 10px}
+  .tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .tab{border:1px solid var(--line);background:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+  .tab.active{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .panel{display:none}.panel.active{display:block}
+  button.btn{background:var(--pri);color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+  button.btn.sec{background:var(--pri2);color:var(--pri)}
+  button.btn.red{background:var(--bad)}
+  button.btn.grn{background:var(--ok)}
+  button.btn:disabled{opacity:.5;cursor:not-allowed}
+  input,select,textarea{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff}
+  label{font-size:13px;color:var(--mut);display:block;margin:6px 0 3px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row>*{flex:1 1 auto}
+  .row>button{flex:0 0 auto}
+  video{width:100%;background:#111;border-radius:10px;max-height:300px}
+  .live{background:#0f172a;color:#d6e2ff;border-radius:8px;padding:10px;height:180px;overflow:auto;font-size:13px;line-height:1.5}
+  .live .sp{color:#7cc4ff;font-weight:600}.live .ch{color:#ffd37c;font-weight:600}
+  .chatbox{height:280px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:8px;background:#fafbfe}
+  .msg{max-width:80%;margin:6px 0;padding:7px 10px;border-radius:10px;font-size:14px;word-wrap:break-word}
+  .msg.spec{background:var(--pri2);margin-right:auto}
+  .msg.child{background:#fff3dd;margin-left:auto}
+  .msg small{display:block;color:var(--mut);font-size:11px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;margin:2px;background:#eef;color:#334}
+  .risk-Aşağı{background:#dff5e8;color:var(--ok)}.risk-Orta{background:#fff0d6;color:var(--warn)}.risk-Yüksək{background:#fde1de;color:var(--bad)}
+  .task{border-left:4px solid var(--pri);background:#f7f9ff;padding:6px 8px;margin:6px 0;font-size:13px;border-radius:4px}
+  .notice{font-size:12px;color:var(--mut);background:#f1f3f9;padding:8px;border-radius:8px;margin-top:8px}
+  .hidden{display:none}
+  #report{border:1px dashed var(--line);padding:14px;border-radius:8px;background:#fff}
+  #report.editing{outline:2px solid var(--warn);background:#fffdf4}
+  #report h3{margin:.2em 0}
+  #report table{width:100%;border-collapse:collapse;font-size:13px}
+  #report td,#report th{border:1px solid var(--line);padding:5px;text-align:left}
+  .rec{color:var(--bad);font-weight:600}
+  @media print{
+    body{background:#fff} header,.no-print,.tabs,main>*:not(#reportWrap){display:none!important}
+    main{display:block;margin:0;max-width:none} #reportWrap{display:block!important;border:0}
+    #report{border:0}
+  }
+</style>
+</head>
+<body>
+<header class="no-print">
+  <div><h1>«İnam və Himayə» Rəqəmsal Mərkəzi</h1><small>Onlayn Məsləhət və Avtomatik Məlumat İnteqrasiyası Alt Sistemi (prototip)</small></div>
+  <div class="row" style="flex:0 0 auto">
+    <label style="color:#fff;margin:0"><input type="checkbox" id="consent" style="width:auto"> Seans qeydinə / transkripsiyaya icazə verilib</label>
+    <span id="timer" class="badge">00:00:00</span>
+  </div>
+</header>
+
+<main>
+<section class="no-print">
+
+  <div class="card">
+    <h2>1. Onlayn Əlaqə Bölmələri</h2>
+    <div class="tabs">
+      <div class="tab active" data-tab="video">📹 Video-zəng</div>
+      <div class="tab" data-tab="chat">💬 Canlı çat</div>
+      <div class="tab" data-tab="voice">📞 Səsli əlaqə</div>
+    </div>
+
+    <!-- 1.1 VIDEO -->
+    <div class="panel active" id="video">
+      <video id="localVideo" autoplay muted playsinline></video>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnCam">Kameranı aç</button>
+        <button class="btn sec" id="btnMic" disabled>Mikrofon: açıq</button>
+        <button class="btn red" id="btnStopCam" disabled>Dayandır</button>
+      </div>
+      <div class="notice">
+        Bu prototipdə yalnız yerli kamera önizləməsi var. Real iki tərəfli, end-to-end şifrələnmiş əlaqə üçün
+        WebRTC (DTLS-SRTP) + siqnal serveri (WebSocket) və E2EE üçün Insertable Streams lazımdır.
+        Bax: <code>// TODO: WebRTC</code> şərhləri <code>app</code> skriptində.
+      </div>
+    </div>
+
+    <!-- 1.2 CHAT -->
+    <div class="panel" id="chat">
+      <div class="chatbox" id="chatbox"></div>
+      <div class="row" style="margin-top:8px">
+        <select id="chatRole" style="max-width:170px"><option value="spec">Mütəxəssis</option><option value="child">Uşaq/nümayəndə</option></select>
+        <input id="chatInput" placeholder="Mesaj yazın...">
+        <button class="btn" id="chatSend">Göndər</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input type="file" id="chatFile" style="max-width:260px">
+        <button class="btn sec" id="btnSurvey">Qısa sorğu göndər</button>
+      </div>
+      <div id="surveyBox" class="hidden" style="margin-top:8px">
+        <div class="notice" style="margin:0 0 8px">Uşağın cavabı (1 – çox pis … 5 – çox yaxşı) avtomatik qiymətləndirmə kartına yazılır.</div>
+        <label>Bu gün özümü necə hiss edirəm?</label><select class="sv" data-k="mood"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+        <label>Özümü təhlükəsiz hiss edirəm</label><select class="sv" data-k="safety"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+        <label>Məktəbə/təhsilə marağım</label><select class="sv" data-k="school"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+        <button class="btn grn" id="btnSurveyDone" style="margin-top:8px">Cavabları göndər</button>
+      </div>
+    </div>
+
+    <!-- 1.3 VOICE -->
+    <div class="panel" id="voice">
+      <label><input type="checkbox" id="anon" style="width:auto"> Anonim rejim (adı protokola yazma)</label>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnCall">Zəngi başlat</button>
+        <button class="btn red" id="btnHang" disabled>Zəngi bitir</button>
+      </div>
+      <div class="notice">Real telefoniya üçün SIP/VoIP provayderi (Twilio, Asterisk və s.) serverdə inteqrasiya edilməlidir. Burada mikrofon + transkripsiya nümayiş olunur.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>2. Canlı Qeyd və Avto-Transkripsiya</h2>
+    <div class="row">
+      <select id="speaker" style="max-width:200px"><option value="Mütəxəssis">Danışan: Mütəxəssis</option><option value="Uşaq">Danışan: Uşaq</option></select>
+      <button class="btn" id="btnSTT">🎙 Transkripsiyanı başlat</button>
+      <button class="btn sec" id="btnSTTStop" disabled>Dayandır</button>
+    </div>
+    <div class="live" id="live" style="margin-top:8px"></div>
+    <div class="notice" id="sttNote">Brauzerin Web Speech API-sından istifadə edilir (Chrome/Edge tövsiyə olunur, dil: az-AZ). Dəstəklənmirsə, mətni əl ilə də əlavə edə bilərsiniz.</div>
+    <div class="row" style="margin-top:8px">
+      <input id="manualLine" placeholder="Əl ilə sətir əlavə et (danışan seçilmiş rolla)">
+      <button class="btn sec" id="btnManual">Əlavə et</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. Mütəxəssis Qeydləri və Avto-Tapşırıqlar</h2>
+    <label>Vacib qeyd (məs.: «təcili hüquqi dəstək lazımdır»)</label>
+    <div class="row"><input id="noteInput" placeholder="Qeyd yazın..."><button class="btn" id="btnNote">Qeyd əlavə et</button></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sec qn" data-t="Təcili hüquqi dəstək lazımdır">⚖ Hüquqi</button>
+      <button class="btn sec qn" data-t="Psixoloji təcili müdaxilə lazımdır">🧠 Psixoloji</button>
+      <button class="btn sec qn" data-t="Tibbi baxış lazımdır">🩺 Tibbi</button>
+      <button class="btn sec qn" data-t="Mənzil/yaşayış təminatı lazımdır">🏠 Mənzil</button>
+    </div>
+    <div id="tasks" style="margin-top:8px"></div>
+  </div>
+
+</section>
+
+<aside class="no-print">
+  <div class="card">
+    <h2>Uşaq kartı (avto-doldurulur)</h2>
+    <label>Uşağın kodu / adı</label><input id="cName" placeholder="Məs.: UŞ-0001">
+    <label>Yaş</label><input id="cAge" type="number" min="0" max="18">
+    <label>Müraciətçi (uşaq/nümayəndə)</label><input id="cRep">
+    <label>Fərdi ehtiyaclar</label><div id="cNeeds"><span class="badge">—</span></div>
+    <label>Risk kateqoriyası (göstərici)</label><div id="cRisk"><span class="badge">—</span></div>
+    <label>Qiymətləndirmə kartı</label><div id="cAssess" class="badge">—</div>
+    <div class="notice">Risk göstəricisi yalnız açar söz əsaslı köməkçi siqnaldır. Yekun qərarı <b>həmişə mütəxəssis</b> verir.</div>
+  </div>
+
+  <div class="card">
+    <h2>Seansı yekunlaşdır</h2>
+    <button class="btn grn" id="btnEnd" style="width:100%">Seansı bitir və hesabat yarat</button>
+    <button class="btn red" id="btnReset" style="width:100%;margin-top:8px">Bütün yerli məlumatı sil</button>
+  </div>
+</aside>
+
+<section class="card" id="reportWrap" style="grid-column:1/-1;display:none">
+  <h2 class="no-print">4. Avto-Hesabat (redaktə və çap)</h2>
+  <div class="row no-print" style="margin-bottom:8px">
+    <button class="btn sec" id="btnEdit">✏ Redaktə et</button>
+    <button class="btn grn" id="btnApprove" disabled>✔ Təsdiqlə</button>
+    <button class="btn" id="btnPrint" disabled>🖨 Çap et</button>
+    <button class="btn sec" id="btnExport">⬇ JSON ixrac</button>
+  </div>
+  <div id="report"></div>
+</section>
+</main>
+
+<script>
+/* ============ app ============ */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const KEY = 'inam_himaye_v1';
+
+const state = {
+  startedAt: Date.now(),
+  transcript: [],   // {t, who, text}
+  chat: [],         // {t, who, text, file?}
+  tasks: [],        // {t, dept, text, src}
+  notes: [],
+  survey: {},
+  keywords: {},     // category -> count
+  approved: false
+};
+
+/* ---- Açar söz lüğəti (köklər; lazım olsa genişləndirin) ---- */
+const LEX = {
+  'Zorakılıq':        {w:3, k:['zorakı','döyül','döydü','vurur','vurdu','təhdid','təcavüz','istismar','incit']},
+  'Emosional gərginlik':{w:2, k:['qorxur','qorxuram','qorxu','kədər','ağlay','tək qal','təkəm','stress','narahat','depress','utanır','ümidsiz','yorul']},
+  'Sağlamlıq problemi':{w:1, k:['xəstə','ağrı','ağrıy','həkim','dərman','xəstəxana','yaralan','allerj']},
+  'Təhsil':           {w:1, k:['məktəb','dərs','müəllim','təhsil','imtahan','kitab','oxumaq','oxuya']},
+  'Mənzil ehtiyacı':  {w:1, k:['mənzil','ev yoxdur','evsiz','yaşayış','otaq','soyuq','yataq']},
+  'Hüquqi dəstək':    {w:2, k:['hüquq','vəsiyyət','qəyyum','məhkəmə','sənəd','vəsiqə','şəxsiyyət vəsiqəsi','miras','himayə']}
+};
+const DEPT = {
+  'hüquqi':'Hüquqşünas', 'psixoloji':'Psixoloq', 'tibbi':'Tibb işçisi', 'mənzil':'Sosial işçi (mənzil)'
+};
+
+/* ---- Persistence ---- */
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify({state, card:getCard()})); }catch(e){}
+}
+function load(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY)||'null');
+    if(!d) return;
+    Object.assign(state, d.state);
+    setCard(d.card||{});
+    state.chat.forEach(renderChatMsg);
+    state.transcript.forEach(renderLive);
+    renderTasks(); renderAnalysis();
+  }catch(e){}
+}
+function getCard(){ return {name:$('#cName').value, age:$('#cAge').value, rep:$('#cRep').value}; }
+function setCard(c){ $('#cName').value=c.name||''; $('#cAge').value=c.age||''; $('#cRep').value=c.rep||''; }
+['#cName','#cAge','#cRep'].forEach(s=>$(s).addEventListener('input',save));
+
+/* ---- Tabs ---- */
+$$('.tab').forEach(t=>t.addEventListener('click',()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+  $$('.panel').forEach(p=>p.classList.remove('active')); $('#'+t.dataset.tab).classList.add('active');
+}));
+
+/* ---- Timer ---- */
+setInterval(()=>{
+  const s = Math.floor((Date.now()-state.startedAt)/1000);
+  const p = n=>String(n).padStart(2,'0');
+  $('#timer').textContent = `${p(Math.floor(s/3600))}:${p(Math.floor(s%3600/60))}:${p(s%60)}`;
+},1000);
+
+/* ============ 1.1 VIDEO ============ */
+let stream=null;
+$('#btnCam').onclick = async ()=>{
+  try{
+    // TODO: WebRTC – RTCPeerConnection yaradın, siqnal serveri ilə SDP/ICE mübadiləsi edin,
+    // E2EE üçün RTCRtpScriptTransform / Insertable Streams tətbiq edin.
+    stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    $('#localVideo').srcObject = stream;
+    $('#btnMic').disabled=false; $('#btnStopCam').disabled=false;
+  }catch(e){ alert('Kamera/mikrofona giriş alınmadı: '+e.message); }
+};
+$('#btnMic').onclick = ()=>{
+  if(!stream) return;
+  const tr = stream.getAudioTracks()[0]; if(!tr) return;
+  tr.enabled = !tr.enabled;
+  $('#btnMic').textContent = 'Mikrofon: '+(tr.enabled?'açıq':'bağlı');
+};
+$('#btnStopCam').onclick = ()=>{
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; $('#localVideo').srcObject=null; }
+  $('#btnMic').disabled=true; $('#btnStopCam').disabled=true;
+};
+
+/* ============ 1.2 CHAT ============ */
+function renderChatMsg(m){
+  const d=document.createElement('div'); d.className='msg '+m.who;
+  const meta=document.createElement('small');
+  meta.textContent=(m.who==='spec'?'Mütəxəssis':'Uşaq/nümayəndə')+' • '+new Date(m.t).toLocaleTimeString('az');
+  const body=document.createElement('div'); body.textContent=m.text + (m.file?` 📎 ${m.file}`:'');
+  d.append(meta,body); $('#chatbox').appendChild(d); $('#chatbox').scrollTop=1e9;
+}
+function sendChat(text,file){
+  if(!text && !file) return;
+  const who=$('#chatRole').value;
+  const m={t:Date.now(),who,text:text||'',file:file||''};
+  state.chat.push(m); renderChatMsg(m);
+  if(text) analyze(text);
+  save();
+}
+$('#chatSend').onclick=()=>{ sendChat($('#chatInput').value.trim()); $('#chatInput').value=''; };
+$('#chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#chatSend').click(); });
+$('#chatFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  // Prototip: yalnız fayl adı saxlanılır. Real sistemdə şifrələnmiş yükləmə (HTTPS + server) istifadə edin.
+  sendChat('',f.name+' ('+Math.round(f.size/1024)+' KB)'); e.target.value='';
+};
+$('#btnSurvey').onclick=()=>$('#surveyBox').classList.toggle('hidden');
+$('#btnSurveyDone').onclick=()=>{
+  const out=[];
+  $$('.sv').forEach(s=>{ if(s.value){ state.survey[s.dataset.k]=+s.value; out.push(s.previousElementSibling.textContent+' → '+s.value); }});
+  if(!out.length) return alert('Heç bir cavab seçilməyib.');
+  const prev=$('#chatRole').value; $('#chatRole').value='child';
+  sendChat('[Sorğu] '+out.join('; ')); $('#chatRole').value=prev;
+  // Aşağı bal → avto-qeyd
+  if(state.survey.safety && state.survey.safety<=2) addTask('psixoloji','Sorğuda təhlükəsizlik hissi aşağıdır ('+state.survey.safety+'/5) – yoxlama tövsiyə olunur','sorğu');
+  renderAnalysis(); save();
+  $('#surveyBox').classList.add('hidden');
+};
+
+/* ============ 1.3 VOICE ============ */
+$('#btnCall').onclick=async()=>{
+  try{
+    stream = stream || await navigator.mediaDevices.getUserMedia({audio:true});
+    $('#btnCall').disabled=true; $('#btnHang').disabled=false;
+    if(!$('#anon').checked && !$('#cName').value) $('#cName').focus();
+    startSTT();
+  }catch(e){ alert('Mikrofona giriş alınmadı: '+e.message); }
+};
+$('#btnHang').onclick=()=>{
+  stopSTT(); $('#btnCall').disabled=false; $('#btnHang').disabled=true;
+  if(stream && !$('#localVideo').srcObject){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+};
+
+/* ============ 2.1 SPEECH TO TEXT ============ */
+let rec=null, sttOn=false;
+function renderLive(l){
+  const d=document.createElement('div');
+  const s=document.createElement('span'); s.className=l.who==='Uşaq'?'ch':'sp'; s.textContent=l.who+': ';
+  d.append(s, document.createTextNode(l.text)); $('#live').appendChild(d); $('#live').scrollTop=1e9;
+}
+function addLine(who,text){
+  if(!text.trim()) return;
+  const l={t:Date.now(),who,text:text.trim()}; state.transcript.push(l); renderLive(l);
+  analyze(text); autoNote(text); save();
+}
+function startSTT(){
+  if(!$('#consent').checked){ alert('Əvvəlcə seans qeydi üçün icazənin verildiyini təsdiqləyin (yuxarıdakı qutu).'); return; }
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ $('#sttNote').textContent='Bu brauzer nitq tanımanı dəstəkləmir. Chrome/Edge istifadə edin və ya mətni əl ilə əlavə edin.'; return; }
+  if(sttOn) return;
+  rec=new SR(); rec.lang='az-AZ'; rec.continuous=true; rec.interimResults=false;
+  rec.onresult=e=>{ for(let i=e.resultIndex;i<e.results.length;i++) if(e.results[i].isFinal) addLine($('#speaker').value,e.results[i][0].transcript); };
+  rec.onend=()=>{ if(sttOn) try{rec.start();}catch(_){} };
+  rec.onerror=e=>{ $('#sttNote').textContent='Nitq tanıma xətası: '+e.error; };
+  rec.start(); sttOn=true; $('#btnSTT').disabled=true; $('#btnSTTStop').disabled=false;
+}
+function stopSTT(){ sttOn=false; if(rec) try{rec.stop();}catch(_){} $('#btnSTT').disabled=false; $('#btnSTTStop').disabled=true; }
+$('#btnSTT').onclick=startSTT; $('#btnSTTStop').onclick=stopSTT;
+$('#btnManual').onclick=()=>{ addLine($('#speaker').value,$('#manualLine').value); $('#manualLine').value=''; };
+
+/* ============ 2.2 AÇAR SÖZ ANALİZİ ============ */
+function analyze(text){
+  const low=text.toLocaleLowerCase('az');
+  for(const [cat,def] of Object.entries(LEX)){
+    for(const k of def.k){ if(low.includes(k)){ state.keywords[cat]=(state.keywords[cat]||0)+1; break; } }
+  }
+  renderAnalysis();
+}
+function riskLevel(){
+  let score=0;
+  for(const [cat,n] of Object.entries(state.keywords)) score+=Math.min(n,3)*LEX[cat].w;
+  if(state.survey.safety && state.survey.safety<=2) score+=2;
+  if(state.survey.mood && state.survey.mood<=2) score+=1;
+  return score>=7?'Yüksək':score>=3?'Orta':'Aşağı';
+}
+function renderAnalysis(){
+  const cats=Object.keys(state.keywords);
+  $('#cNeeds').innerHTML=cats.length?'':'<span class="badge">—</span>';
+  cats.forEach(c=>{ const b=document.createElement('span'); b.className='badge'; b.textContent=`${c} (${state.keywords[c]})`; $('#cNeeds').appendChild(b); });
+  const r=riskLevel(); $('#cRisk').innerHTML=''; const rb=document.createElement('span'); rb.className='badge risk-'+r; rb.textContent=r+' (avtomatik göstərici)'; $('#cRisk').appendChild(rb);
+  const s=state.survey; $('#cAssess').textContent=Object.keys(s).length?`Əhval: ${s.mood??'—'}/5 • Təhlükəsizlik: ${s.safety??'—'}/5 • Təhsil marağı: ${s.school??'—'}/5`:'—';
+}
+
+/* ============ 2.3 AVTO-TAPŞIRIQLAR ============ */
+function deptKey(text){
+  const l=text.toLocaleLowerCase('az');
+  if(/hüquq|vəsiyyət|məhkəmə|qəyyum|sənəd/.test(l)) return 'hüquqi';
+  if(/psixoloq|psixoloji|travma|zorakı/.test(l)) return 'psixoloji';
+  if(/həkim|tibbi|xəstə/.test(l)) return 'tibbi';
+  if(/mənzil|yaşayış|ev /.test(l)) return 'mənzil';
+  return null;
+}
+function addTask(key,text,src){
+  if(state.tasks.some(t=>t.text===text)) return;
+  state.tasks.push({t:Date.now(),dept:DEPT[key]||'Sosial işçi',text,src});
+  renderTasks(); save();
+}
+function renderTasks(){
+  $('#tasks').innerHTML='';
+  state.tasks.forEach(t=>{
+    const d=document.createElement('div'); d.className='task';
+    d.textContent=`→ ${t.dept}: ${t.text} (${new Date(t.t).toLocaleTimeString('az')})`;
+    $('#tasks').appendChild(d);
+  });
+}
+function addNote(text){
+  if(!text.trim()) return;
+  state.notes.push({t:Date.now(),text:text.trim()});
+  const k=deptKey(text); if(k) addTask(k,text.trim(),'qeyd');
+  analyze(text); save();
+}
+// Nitqdə «təcili» + sahə sözü keçərsə, mütəxəssis üçün təklif kimi avto-tapşırıq
+function autoNote(text){
+  const l=text.toLocaleLowerCase('az');
+  if(l.includes('təcili')){ const k=deptKey(l); if(k) addTask(k,'(Transkripsiyadan) '+text.trim(),'transkript'); }
+}
+$('#btnNote').onclick=()=>{ addNote($('#noteInput').value); $('#noteInput').value=''; };
+$$('.qn').forEach(b=>b.onclick=()=>addNote(b.dataset.t));
+
+/* ============ 2.4 SEANS SONU HESABAT ============ */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function fmtDur(ms){ const s=Math.floor(ms/1000); return `${Math.floor(s/60)} dəq ${s%60} san`; }
+
+function buildReport(){
+  const c=getCard(), anon=$('#anon').checked;
+  const end=Date.now(), r=riskLevel();
+  const name=anon?'(anonim)':(c.name||'—');
+  const cats=Object.entries(state.keywords).map(([k,v])=>`${esc(k)} (${v})`).join(', ')||'—';
+  const s=state.survey;
+  $('#report').innerHTML=`
+    <h3>Seans Protokolu</h3>
+    <p><b>Mərkəz:</b> «İnam və Himayə» Rəqəmsal Mərkəzi</p>
+    <table>
+      <tr><th>Tarix</th><td>${new Date(state.startedAt).toLocaleDateString('az')}</td><th>Müddət</th><td>${fmtDur(end-state.startedAt)}</td></tr>
+      <tr><th>Uşaq (kod/ad)</th><td>${esc(name)}</td><th>Yaş</th><td>${esc(c.age||'—')}</td></tr>
+      <tr><th>İştirakçılar</th><td colspan="3">Mütəxəssis; ${esc(anon?'uşaq/nümayəndə (anonim)':(c.rep||'uşaq/nümayəndə'))}</td></tr>
+    </table>
+    <h3>Seans Xülasəsi</h3>
+    <p><b>Əsas mövzular (açar söz üzrə):</b> ${cats}</p>
+    <p><b>Risk kateqoriyası (avtomatik göstərici, mütəxəssis təsdiqi tələb olunur):</b> <span class="rec">${r}</span></p>
+    <p><b>Qiymətləndirmə kartı:</b> Əhval ${s.mood??'—'}/5; Təhlükəsizlik ${s.safety??'—'}/5; Təhsil marağı ${s.school??'—'}/5</p>
+    <h3>Mütəxəssis qeydləri</h3>
+    <ul>${state.notes.map(n=>`<li>${esc(n.text)}</li>`).join('')||'<li>—</li>'}</ul>
+    <h3>Avto-tapşırıqlar</h3>
+    <ul>${state.tasks.map(t=>`<li><b>${esc(t.dept)}:</b> ${esc(t.text)}</li>`).join('')||'<li>—</li>'}</ul>
+    <h3>Yenilənmiş Uşaq Kartı</h3>
+    <p>Ehtiyaclar: ${cats}. Risk göstəricisi: ${r}. Çat mesajı sayı: ${state.chat.length}. Transkripsiya sətri: ${state.transcript.length}.</p>
+    <h3>Transkripsiya</h3>
+    <p>${state.transcript.map(l=>`<b>${esc(l.who)}:</b> ${esc(l.text)}`).join('<br>')||'—'}</p>
+    <h3>Çat tarixçəsi</h3>
+    <p>${state.chat.map(m=>`<b>${m.who==='spec'?'Mütəxəssis':'Uşaq/nümayəndə'}:</b> ${esc(m.text)}${m.file?' 📎 '+esc(m.file):''}`).join('<br>')||'—'}</p>
+    <p style="margin-top:24px">Mütəxəssisin imzası: ____________________ &nbsp; Tarix: ____________</p>`;
+  $('#reportWrap').style.display='block';
+  $('#reportWrap').scrollIntoView({behavior:'smooth'});
+  state.approved=false; $('#btnApprove').disabled=true; $('#btnPrint').disabled=true;
+}
+$('#btnEnd').onclick=()=>{ stopSTT(); buildReport(); };
+
+/* ============ 3. REDAKTƏ / TƏSDİQ / ÇAP ============ */
+let editing=false;
+$('#btnEdit').onclick=()=>{
+  editing=!editing;
+  $('#report').contentEditable=editing; $('#report').classList.toggle('editing',editing);
+  $('#btnEdit').textContent=editing?'💾 Redaktəni bitir':'✏ Redaktə et';
+  $('#btnApprove').disabled=editing; if(editing){ $('#btnPrint').disabled=true; state.approved=false; }
+  else $('#btnApprove').disabled=false;
+};
+$('#btnApprove').onclick=()=>{ state.approved=true; $('#btnPrint').disabled=false; alert('Hesabat təsdiqləndi. İndi çap edə bilərsiniz.'); };
+$('#btnPrint').onclick=()=>{ if(!state.approved) return alert('Əvvəlcə təsdiqləyin.'); window.print(); };
+$('#btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),card:getCard(),state},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='seans-'+Date.now()+'.json'; a.click();
+};
+
+/* ============ Məlumatı sil ============ */
+$('#btnReset').onclick=()=>{
+  if(confirm('Bu brauzerdə saxlanılan bütün seans məlumatı silinsin?')){ localStorage.removeItem(KEY); location.reload(); }
+};
+
+load(); renderAnalysis();
+</script>
+</body>
+</html>
